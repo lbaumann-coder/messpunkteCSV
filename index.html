@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#1a5c3a">
-<title>Koordinaten</title>
+<title>KOORDINATEN2CSV</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
 
@@ -30,32 +30,29 @@
   header h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; }
   header p  { font-family: var(--mono); font-size: 0.65rem; color: rgba(255,255,255,0.65); margin-top: 2px; }
 
-  main { padding: 20px; max-width: 600px; margin: 0 auto; }
+  main { padding: 16px; max-width: 480px; margin: 0 auto; }
 
-  .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
-  .card-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .card { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.07); }
+  .card-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
 
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-
-  .field { display: flex; flex-direction: column; gap: 4px; }
+  /* All fields stacked */
+  .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .field:last-of-type { margin-bottom: 0; }
   label { font-family: var(--mono); font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 
-  /* Input with paste button */
   .input-row { display: flex; align-items: stretch; border: 1.5px solid var(--border); border-radius: 7px; overflow: hidden; background: var(--bg); transition: border-color 0.15s, box-shadow 0.15s; }
   .input-row:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,92,58,0.12); }
-
   .input-row input {
     flex: 1; background: transparent; border: none; outline: none;
-    color: var(--text); font-family: var(--mono); font-size: 0.82rem;
-    padding: 10px 10px; min-width: 0;
-    -webkit-appearance: none;
+    color: var(--text); font-family: var(--mono); font-size: 0.88rem;
+    padding: 12px 12px; min-width: 0; -webkit-appearance: none;
   }
   .input-row input::placeholder { color: var(--muted); opacity: 0.55; font-style: italic; }
 
   .paste-btn {
     background: var(--accent); border: none; color: #fff;
     font-family: var(--mono); font-size: 0.6rem; font-weight: 700;
-    letter-spacing: 0.05em; padding: 0 11px; cursor: pointer;
+    letter-spacing: 0.05em; padding: 0 13px; cursor: pointer;
     -webkit-tap-highlight-color: transparent; user-select: none; flex-shrink: 0;
     display: flex; align-items: center; transition: background 0.12s;
   }
@@ -70,21 +67,11 @@
   }
   .prefix-bar span { color: var(--muted); }
 
-  /* Counter display */
-  .counter-display {
-    background: var(--bg); border: 1.5px solid var(--border); border-radius: 7px;
-    padding: 10px 12px; font-family: var(--mono); font-size: 0.82rem;
-    color: var(--muted); display: flex; align-items: center; gap: 6px;
-  }
-  .counter-val { color: var(--accent); font-weight: 700; }
-
   /* BUTTONS */
   .btn { display: flex; align-items: center; justify-content: center; gap: 8px; border: none; border-radius: 8px; cursor: pointer; font-family: var(--sans); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; -webkit-tap-highlight-color: transparent; user-select: none; transition: transform 0.1s, opacity 0.15s; }
   .btn:active { transform: scale(0.97); opacity: 0.85; }
-  .btn-primary { background: var(--accent); color: #fff; font-size: 0.8rem; padding: 13px 20px; width: 100%; margin-top: 16px; box-shadow: 0 2px 6px rgba(26,92,58,0.25); }
-  .btn-export  { background: var(--accent2); color: #fff; font-size: 0.75rem; padding: 11px 18px; flex: 1; }
-  .btn-clear   { background: transparent; border: 1.5px solid var(--danger); color: var(--danger); font-size: 0.75rem; padding: 11px 18px; }
-  .btn-row     { display: flex; gap: 10px; }
+  .btn-primary { background: var(--accent); color: #fff; font-size: 0.85rem; padding: 15px 20px; width: 100%; margin-top: 16px; box-shadow: 0 2px 6px rgba(26,92,58,0.25); }
+  .btn-export  { background: var(--accent2); color: #fff; font-size: 0.85rem; padding: 15px 20px; width: 100%; box-shadow: 0 2px 6px rgba(26,58,140,0.2); }
 
   /* TOAST */
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--accent); color: #fff; font-family: var(--mono); font-size: 0.75rem; font-weight: 600; padding: 10px 20px; border-radius: 20px; transition: transform 0.25s cubic-bezier(.34,1.56,.64,1); z-index: 999; white-space: nowrap; pointer-events: none; box-shadow: 0 4px 16px rgba(0,0,0,0.18); }
@@ -100,7 +87,7 @@
   .del-btn { background: none; border: none; cursor: pointer; color: #bbb; font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; -webkit-tap-highlight-color: transparent; }
   .del-btn:active { color: var(--danger); }
 
-  .empty { text-align: center; padding: 32px 20px; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; }
+  .empty { text-align: center; padding: 28px 20px; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; }
   .empty span { display: block; font-size: 2rem; margin-bottom: 8px; opacity: 0.35; }
 
   .count-badge { display: inline-block; background: rgba(26,92,58,0.12); color: var(--accent); border-radius: 20px; font-family: var(--mono); font-size: 0.65rem; font-weight: 600; padding: 2px 10px; margin-left: 8px; vertical-align: middle; }
@@ -120,14 +107,12 @@
   <div class="card">
     <div class="card-title">Neuer Punkt</div>
 
-    <!-- Prefix info -->
     <div class="prefix-bar" id="prefixBar">
       <span>Präfix aktiv: </span><strong id="prefixDisplay"></strong>
       <span> → nächster Punkt: </span><strong id="nextNameDisplay"></strong>
     </div>
 
-    <!-- Name / Prefix -->
-    <div class="field" style="margin-bottom:12px">
+    <div class="field">
       <label>Name / Präfix</label>
       <div class="input-row">
         <input id="iName" type="text" placeholder="z.B. P oder Punkt" autocomplete="off"
@@ -136,21 +121,21 @@
       </div>
     </div>
 
-    <!-- Easting + Northing -->
-    <div class="grid-2">
-      <div class="field">
-        <label>Easting</label>
-        <div class="input-row">
-          <input id="iEast" type="text" inputmode="decimal" placeholder="438295.232" autocomplete="off">
-          <button class="paste-btn" onclick="pasteInto('iEast')">PASTE</button>
-        </div>
+    <div class="field">
+      <label>Easting</label>
+      <div class="input-row">
+        <input id="iEast" type="text" inputmode="decimal" placeholder="438295.232" autocomplete="off"
+               oninput="autoFormatCoord(this)">
+        <button class="paste-btn" onclick="pasteInto('iEast', ()=>autoFormatCoord(document.getElementById('iEast')))">PASTE</button>
       </div>
-      <div class="field">
-        <label>Northing</label>
-        <div class="input-row">
-          <input id="iNorth" type="text" inputmode="decimal" placeholder="297883.520" autocomplete="off">
-          <button class="paste-btn" onclick="pasteInto('iNorth')">PASTE</button>
-        </div>
+    </div>
+
+    <div class="field">
+      <label>Northing</label>
+      <div class="input-row">
+        <input id="iNorth" type="text" inputmode="decimal" placeholder="297883.520" autocomplete="off"
+               oninput="autoFormatCoord(this)">
+        <button class="paste-btn" onclick="pasteInto('iNorth', ()=>autoFormatCoord(document.getElementById('iNorth')))">PASTE</button>
       </div>
     </div>
 
@@ -159,12 +144,8 @@
 
   <!-- LIST -->
   <div class="card">
-    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
       <span class="card-title" style="margin-bottom:0">Punkte <span id="countBadge" class="count-badge">0</span></span>
-      <div class="btn-row">
-        <button class="btn btn-export" onclick="exportCsv()">&#8659; CSV</button>
-        <button class="btn btn-clear" onclick="clearAll()">&#10005; Leeren</button>
-      </div>
     </div>
     <div class="table-wrap">
       <table>
@@ -177,6 +158,12 @@
       <div class="divider"></div>
       <div class="card-title">CSV-Vorschau</div>
       <div id="csvPreview" class="csv-preview"></div>
+      <div style="margin-top:14px">
+        <button class="btn btn-export" onclick="exportCsv()">&#8659; CSV herunterladen</button>
+      </div>
+    </div>
+    <div id="emptyExport" style="display:none; margin-top:14px">
+      <button class="btn btn-export" onclick="exportCsv()">&#8659; CSV herunterladen</button>
     </div>
   </div>
 </main>
@@ -184,11 +171,11 @@
 <div id="toast"></div>
 
 <script>
-  const STORAGE_KEY = 'koordinaten_v3';
+  const STORAGE_KEY = 'koordinaten_v4';
   let points  = [];
-  let counter = 1;        // auto-increment per session
-  let prefix  = '';       // current prefix
-  let csvName = '';       // filename = first-ever prefix
+  let counter = 1;
+  let prefix  = '';
+  let csvName = '';
 
   function save() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ points, counter, prefix, csvName }));
@@ -198,6 +185,28 @@
       const d = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (d) { points = d.points||[]; counter = d.counter||1; prefix = d.prefix||''; csvName = d.csvName||''; }
     } catch {}
+  }
+
+  // ── Coordinate formatting ─────────────────────────────────
+  // Strips all non-digit/dot chars, then ensures dot after 6th digit
+  function formatCoord(raw) {
+    // Remove everything except digits and dot
+    let s = raw.replace(/[^\d.]/g, '');
+    // Remove any existing dots
+    s = s.replace(/\./g, '');
+    if (s.length === 0) return '';
+    if (s.length <= 6) return s; // not enough digits yet, leave as-is
+    // Insert dot after 6th digit
+    return s.slice(0, 6) + '.' + s.slice(6);
+  }
+
+  function autoFormatCoord(el) {
+    const pos   = el.selectionStart;
+    const raw   = el.value;
+    const formatted = formatCoord(raw);
+    if (formatted !== raw) {
+      el.value = formatted;
+    }
   }
 
   function fmt3(v) { return parseFloat(v).toFixed(3); }
@@ -216,9 +225,9 @@
   }
 
   function updatePrefixBar(p) {
-    const bar   = document.getElementById('prefixBar');
-    const pdis  = document.getElementById('prefixDisplay');
-    const ndis  = document.getElementById('nextNameDisplay');
+    const bar  = document.getElementById('prefixBar');
+    const pdis = document.getElementById('prefixDisplay');
+    const ndis = document.getElementById('nextNameDisplay');
     if (p) {
       bar.style.display = '';
       pdis.textContent  = p;
@@ -228,20 +237,39 @@
     }
   }
 
+  // Update iName placeholder to show next point name
+  function updateNamePlaceholder() {
+    const el = document.getElementById('iName');
+    if (prefix) {
+      el.placeholder = prefix + counter + '  (Präfix beibehalten)';
+    } else {
+      el.placeholder = 'z.B. P oder Punkt';
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────
   function render() {
-    const badge      = document.getElementById('countBadge');
-    const tbody      = document.getElementById('tableBody');
-    const empty      = document.getElementById('emptyState');
-    const previewWrap= document.getElementById('previewWrap');
+    const badge       = document.getElementById('countBadge');
+    const tbody       = document.getElementById('tableBody');
+    const empty       = document.getElementById('emptyState');
+    const previewWrap = document.getElementById('previewWrap');
+    const emptyExport = document.getElementById('emptyExport');
 
     badge.textContent = points.length;
     updatePrefixBar(prefix);
+    updateNamePlaceholder();
 
     if (points.length === 0) {
-      tbody.innerHTML = ''; empty.style.display = ''; previewWrap.style.display = 'none'; return;
+      tbody.innerHTML = '';
+      empty.style.display = '';
+      previewWrap.style.display = 'none';
+      emptyExport.style.display = 'none';
+      return;
     }
-    empty.style.display = 'none'; previewWrap.style.display = '';
+    empty.style.display = 'none';
+    previewWrap.style.display = '';
+    emptyExport.style.display = 'none';
+
     tbody.innerHTML = points.map((p,i) => `
       <tr>
         <td>${esc(p.name)}</td>
@@ -254,7 +282,7 @@
 
   function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  // ── Paste (Clipboard API) ─────────────────────────────────
+  // ── Paste ─────────────────────────────────────────────────
   async function pasteInto(inputId, callback) {
     try {
       const text = await navigator.clipboard.readText();
@@ -263,37 +291,35 @@
       if (callback) callback();
       showToast('Eingefügt ✓');
     } catch(e) {
-      showToast('Clipboard-Zugriff verweigert – bitte HTTPS verwenden', true);
+      showToast('Clipboard-Zugriff verweigert – HTTPS erforderlich', true);
     }
   }
 
   // ── Add point ─────────────────────────────────────────────
   function addPoint() {
     const nameInput = document.getElementById('iName').value.trim();
-    const east      = document.getElementById('iEast').value.trim().replace(',','.');
-    const north     = document.getElementById('iNorth').value.trim().replace(',','.');
+    const eastRaw   = document.getElementById('iEast').value.trim().replace(',','.');
+    const northRaw  = document.getElementById('iNorth').value.trim().replace(',','.');
 
-    // Update prefix if user typed something new; reset counter if prefix changed
+    // Update prefix if typed something new; reset counter if changed
     if (nameInput && nameInput !== prefix) {
-      prefix = nameInput;
+      prefix  = nameInput;
       counter = 1;
     }
 
-    if (!prefix)        { showToast('Bitte zuerst einen Namen / Präfix eingeben', true); return; }
-    if (!east || !north){ showToast('Easting und Northing sind Pflicht', true); return; }
-    if (isNaN(parseFloat(east)) || isNaN(parseFloat(north))) { showToast('Ungültige Koordinaten', true); return; }
+    if (!prefix)               { showToast('Bitte zuerst einen Namen / Präfix eingeben', true); return; }
+    if (!eastRaw || !northRaw) { showToast('Easting und Northing sind Pflicht', true); return; }
+    if (isNaN(parseFloat(eastRaw)) || isNaN(parseFloat(northRaw))) { showToast('Ungültige Koordinaten', true); return; }
 
-    // First-ever prefix becomes the CSV filename
     if (!csvName) csvName = prefix;
 
     const pointName = prefix + counter;
     counter++;
 
-    points.push({ name: pointName, easting: parseFloat(east), northing: parseFloat(north) });
+    points.push({ name: pointName, easting: parseFloat(eastRaw), northing: parseFloat(northRaw) });
     save();
     render();
 
-    // Clear only coordinate fields; keep prefix field empty (prefix persists internally)
     document.getElementById('iName').value  = '';
     document.getElementById('iEast').value  = '';
     document.getElementById('iNorth').value = '';
@@ -303,18 +329,6 @@
 
   function deletePoint(i) { points.splice(i,1); save(); render(); showToast('Gelöscht'); }
 
-  function clearAll() {
-    if (!points.length) return;
-    if (confirm(`Alle ${points.length} Punkte und Zähler zurücksetzen?`)) {
-      points=[]; counter=1; prefix=''; csvName='';
-      document.getElementById('iName').value='';
-      document.getElementById('iEast').value='';
-      document.getElementById('iNorth').value='';
-      save(); render();
-      showToast('Liste geleert');
-    }
-  }
-
   function exportCsv() {
     if (!points.length) { showToast('Keine Punkte vorhanden', true); return; }
     const blob = new Blob([buildCsv()], {type:'text/csv;charset=utf-8;'});
@@ -322,7 +336,16 @@
     a.href     = URL.createObjectURL(blob);
     a.download = (csvName || 'koordinaten') + '.csv';
     a.click();
-    showToast('CSV exportiert ✓');
+    URL.revokeObjectURL(a.href);
+
+    // Clear list after download
+    points  = [];
+    counter = 1;
+    csvName = '';
+    // keep prefix for next session
+    save();
+    render();
+    showToast('CSV exportiert – Liste geleert ✓');
   }
 
   // ── Toast ─────────────────────────────────────────────────
@@ -333,7 +356,7 @@
     t.style.background = isError ? 'var(--danger)' : 'var(--accent)';
     t.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
   load(); render();
