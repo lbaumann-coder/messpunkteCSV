@@ -117,7 +117,6 @@
       <div class="input-row">
         <input id="iName" type="text" placeholder="z.B. P oder Punkt" autocomplete="off"
                oninput="onPrefixInput()">
-        <button class="paste-btn" onclick="pasteInto('iName', onPrefixInput)">PASTE</button>
       </div>
     </div>
 
@@ -155,15 +154,9 @@
       <div id="emptyState" class="empty"><span>📍</span>Noch keine Punkte eingetragen.</div>
     </div>
     <div id="previewWrap" style="display:none">
-      <div class="divider"></div>
-      <div class="card-title">CSV-Vorschau</div>
-      <div id="csvPreview" class="csv-preview"></div>
       <div style="margin-top:14px">
         <button class="btn btn-export" onclick="exportCsv()">&#8659; CSV herunterladen</button>
       </div>
-    </div>
-    <div id="emptyExport" style="display:none; margin-top:14px">
-      <button class="btn btn-export" onclick="exportCsv()">&#8659; CSV herunterladen</button>
     </div>
   </div>
 </main>
@@ -212,9 +205,9 @@
   function fmt3(v) { return parseFloat(v).toFixed(3); }
 
   function buildCsv() {
-    let lines = ['Name,Easting,Northing'];
+    let lines = ['Name,Easting,Northing,Elevation'];
     for (const p of points)
-      lines.push(`${p.name},${fmt3(p.easting)},${fmt3(p.northing)}`);
+      lines.push(`${p.name},${fmt3(p.easting)},${fmt3(p.northing)},0.000`);
     return lines.join('\n');
   }
 
@@ -253,7 +246,6 @@
     const tbody       = document.getElementById('tableBody');
     const empty       = document.getElementById('emptyState');
     const previewWrap = document.getElementById('previewWrap');
-    const emptyExport = document.getElementById('emptyExport');
 
     badge.textContent = points.length;
     updatePrefixBar(prefix);
@@ -263,12 +255,10 @@
       tbody.innerHTML = '';
       empty.style.display = '';
       previewWrap.style.display = 'none';
-      emptyExport.style.display = 'none';
       return;
     }
     empty.style.display = 'none';
     previewWrap.style.display = '';
-    emptyExport.style.display = 'none';
 
     tbody.innerHTML = points.map((p,i) => `
       <tr>
@@ -277,7 +267,6 @@
         <td>${fmt3(p.northing)}</td>
         <td><button class="del-btn" onclick="deletePoint(${i})">×</button></td>
       </tr>`).join('');
-    document.getElementById('csvPreview').textContent = buildCsv();
   }
 
   function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -293,6 +282,36 @@
     } catch(e) {
       showToast('Clipboard-Zugriff verweigert – HTTPS erforderlich', true);
     }
+  }
+
+  // ── Validation ────────────────────────────────────────────
+  // Returns error string or null if ok
+  function validateCoord(raw, type) {
+    // Must contain a dot
+    const dotIdx = raw.indexOf('.');
+    if (dotIdx === -1) return 'Kein Dezimalpunkt gefunden';
+
+    const intPart  = raw.slice(0, dotIdx);
+    const fracPart = raw.slice(dotIdx + 1);
+
+    // At least 6 digits before dot
+    if (intPart.replace(/\D/g,'').length < 6)
+      return 'Wert ist außerhalb des Bereichs';
+
+    // At least 3 decimal places
+    if (fracPart.length < 3)
+      return 'Wert ist außerhalb des Bereichs';
+
+    // Prefix check
+    if (type === 'easting') {
+      if (!intPart.startsWith('43') && !intPart.startsWith('71'))
+        return 'Wert ist außerhalb des Bereichs';
+    }
+    if (type === 'northing') {
+      if (!intPart.startsWith('29') && !intPart.startsWith('35'))
+        return 'Wert ist außerhalb des Bereichs';
+    }
+    return null;
   }
 
   // ── Add point ─────────────────────────────────────────────
@@ -311,12 +330,30 @@
     if (!eastRaw || !northRaw) { showToast('Easting und Northing sind Pflicht', true); return; }
     if (isNaN(parseFloat(eastRaw)) || isNaN(parseFloat(northRaw))) { showToast('Ungültige Koordinaten', true); return; }
 
+    const eastErr  = validateCoord(eastRaw,  'easting');
+    const northErr = validateCoord(northRaw, 'northing');
+
+    // Check if values are simply swapped
+    const eastAsNorth = validateCoord(eastRaw,  'northing');
+    const northAsEast = validateCoord(northRaw, 'easting');
+    const swapped = (eastErr || northErr) && !eastAsNorth && !northAsEast;
+
+    let finalEast  = eastRaw;
+    let finalNorth = northRaw;
+    if (swapped) {
+      finalEast  = northRaw;
+      finalNorth = eastRaw;
+    } else {
+      if (eastErr)  { alert('Easting: ' + eastErr);  return; }
+      if (northErr) { alert('Northing: ' + northErr); return; }
+    }
+
     if (!csvName) csvName = prefix;
 
     const pointName = prefix + counter;
     counter++;
 
-    points.push({ name: pointName, easting: parseFloat(eastRaw), northing: parseFloat(northRaw) });
+    points.push({ name: pointName, easting: parseFloat(finalEast), northing: parseFloat(finalNorth) });
     save();
     render();
 
@@ -341,8 +378,9 @@
     // Clear list after download
     points  = [];
     counter = 1;
+    prefix  = '';
     csvName = '';
-    // keep prefix for next session
+    document.getElementById('iName').value = '';
     save();
     render();
     showToast('CSV exportiert – Liste geleert ✓');
