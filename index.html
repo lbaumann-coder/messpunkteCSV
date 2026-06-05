@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a5c3a">
+<title>Koordinaten</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg:      #f0ede6;
+    --surface: #ffffff;
+    --border:  #c8c0b0;
+    --accent:  #1a5c3a;
+    --accent2: #1a3a8c;
+    --danger:  #b52020;
+    --text:    #1a1610;
+    --muted:   #6b6050;
+    --mono:    'JetBrains Mono', monospace;
+    --sans:    'Syne', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    padding: 0 0 80px 0;
+    overflow-x: hidden;
+  }
+
+  header {
+    background: var(--accent);
+    border-bottom: 2px solid #0d3d26;
+    padding: 18px 20px 14px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  header h1 { font-size: 1.1rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: #fff; }
+  header p  { font-family: var(--mono); font-size: 0.65rem; color: rgba(255,255,255,0.65); margin-top: 2px; }
+
+  main { padding: 20px; max-width: 600px; margin: 0 auto; }
+
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+  .card-title { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  label { font-family: var(--mono); font-size: 0.6rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+  /* Display row (no keyboard) */
+  .input-row {
+    display: flex; align-items: stretch;
+    border: 1.5px solid var(--border); border-radius: 7px;
+    overflow: hidden; background: var(--bg);
+  }
+  .val-display {
+    flex: 1; background: transparent; border: none;
+    color: var(--text); font-family: var(--mono); font-size: 0.82rem;
+    padding: 10px 10px; cursor: default; user-select: none;
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .val-display.ph { color: var(--muted); opacity: 0.55; font-style: italic; }
+
+  .paste-btn {
+    background: var(--accent); border: none; color: #fff;
+    font-family: var(--mono); font-size: 0.6rem; font-weight: 700;
+    letter-spacing: 0.05em; padding: 0 11px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; user-select: none; flex-shrink: 0;
+    display: flex; align-items: center;
+    transition: background 0.12s;
+  }
+  .paste-btn:active { background: #0d3d26; }
+
+  /* BUTTONS */
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: none; border-radius: 8px; cursor: pointer;
+    font-family: var(--sans); font-weight: 700;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    -webkit-tap-highlight-color: transparent; user-select: none;
+    transition: transform 0.1s, opacity 0.15s;
+  }
+  .btn:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-primary { background: var(--accent); color: #fff; font-size: 0.8rem; padding: 13px 20px; width: 100%; margin-top: 16px; box-shadow: 0 2px 6px rgba(26,92,58,0.25); }
+  .btn-export  { background: var(--accent2); color: #fff; font-size: 0.75rem; padding: 11px 18px; flex: 1; }
+  .btn-clear   { background: transparent; border: 1.5px solid var(--danger); color: var(--danger); font-size: 0.75rem; padding: 11px 18px; }
+  .btn-row     { display: flex; gap: 10px; }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45); z-index: 200;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border-radius: 12px;
+    padding: 22px; width: 100%; max-width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+  }
+  .modal-label {
+    font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .modal input {
+    width: 100%; background: var(--bg);
+    border: 1.5px solid var(--border); border-radius: 7px;
+    color: var(--text); font-family: var(--mono); font-size: 1rem;
+    padding: 12px 14px; outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+  .modal input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(26,92,58,0.12); }
+  .modal-btns { display: flex; gap: 10px; margin-top: 14px; }
+  .modal-ok {
+    flex: 1; background: var(--accent); color: #fff;
+    border: none; border-radius: 8px; padding: 12px;
+    font-family: var(--sans); font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+  .modal-ok:active { opacity: 0.8; }
+  .modal-cancel {
+    background: transparent; border: 1.5px solid var(--border); color: var(--muted);
+    border-radius: 8px; padding: 12px 16px;
+    font-family: var(--sans); font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--accent); color: #fff;
+    font-family: var(--mono); font-size: 0.75rem; font-weight: 600;
+    padding: 10px 20px; border-radius: 20px;
+    transition: transform 0.25s cubic-bezier(.34,1.56,.64,1);
+    z-index: 999; white-space: nowrap; pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.72rem; }
+  th { text-align: left; padding: 8px 10px; color: var(--muted); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; border-bottom: 2px solid var(--border); font-size: 0.6rem; background: #f8f6f2; }
+  td { padding: 10px 10px; border-bottom: 1px solid #e8e2d8; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(26,92,58,0.04); }
+  .del-btn { background: none; border: none; cursor: pointer; color: #bbb; font-size: 1.1rem; padding: 2px 6px; border-radius: 4px; -webkit-tap-highlight-color: transparent; }
+  .del-btn:active { color: var(--danger); }
+
+  .empty { text-align: center; padding: 32px 20px; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; }
+  .empty span { display: block; font-size: 2rem; margin-bottom: 8px; opacity: 0.35; }
+
+  .count-badge { display: inline-block; background: rgba(26,92,58,0.12); color: var(--accent); border-radius: 20px; font-family: var(--mono); font-size: 0.65rem; font-weight: 600; padding: 2px 10px; margin-left: 8px; vertical-align: middle; }
+
+  .csv-preview { background: #f8f6f2; border: 1.5px solid var(--border); border-radius: 8px; padding: 12px 14px; font-family: var(--mono); font-size: 0.65rem; color: var(--muted); line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>&#9632; Koordinaten</h1>
+  <p>Name · Easting · Northing · Elevation → CSV</p>
+</header>
+
+<main>
+  <div class="card">
+    <div class="card-title">Neuer Punkt</div>
+    <div class="grid-2" style="margin-bottom:12px">
+      <div class="field">
+        <label>Name / ID</label>
+        <div class="input-row">
+          <div class="val-display ph" id="dName">152</div>
+          <button class="paste-btn" onclick="openModal('iName','dName','Name / ID',false)">PASTE</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Elevation</label>
+        <div class="input-row">
+          <div class="val-display ph" id="dElev">0.000</div>
+          <button class="paste-btn" onclick="openModal('iElev','dElev','Elevation',true)">PASTE</button>
+        </div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="field">
+        <label>Easting</label>
+        <div class="input-row">
+          <div class="val-display ph" id="dEast">438295.232</div>
+          <button class="paste-btn" onclick="openModal('iEast','dEast','Easting',true)">PASTE</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Northing</label>
+        <div class="input-row">
+          <div class="val-display ph" id="dNorth">297883.520</div>
+          <button class="paste-btn" onclick="openModal('iNorth','dNorth','Northing',true)">PASTE</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addPoint()">+ Punkt hinzufügen</button>
+  </div>
+
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+      <span class="card-title" style="margin-bottom:0">Punkte <span id="countBadge" class="count-badge">0</span></span>
+      <div class="btn-row">
+        <button class="btn btn-export" onclick="exportCsv()">&#8659; CSV</button>
+        <button class="btn btn-clear" onclick="clearAll()">&#10005; Leeren</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Easting</th><th>Northing</th><th>Elev.</th><th></th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <div id="emptyState" class="empty"><span>📍</span>Noch keine Punkte eingetragen.</div>
+    </div>
+    <div id="previewWrap" style="display:none">
+      <div class="divider"></div>
+      <div class="card-title">CSV-Vorschau</div>
+      <div id="csvPreview" class="csv-preview"></div>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="overlayClick(event)">
+  <div class="modal">
+    <div class="modal-label" id="modalLabel">Wert eingeben</div>
+    <input id="modalInput" type="text" autocomplete="off" inputmode="decimal"
+           onkeydown="if(event.key==='Enter')modalOk()">
+    <div class="modal-btns">
+      <button class="modal-cancel" onclick="closeModal()">Abbrechen</button>
+      <button class="modal-ok" onclick="modalOk()">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const STORAGE_KEY = 'koordinaten_v2';
+  let points = [];
+
+  // hidden store for field values
+  const vals = { iName:'', iEast:'', iNorth:'', iElev:'' };
+  const placeholders = { iName:'152', iEast:'438295.232', iNorth:'297883.520', iElev:'0.000' };
+  const displayIds   = { iName:'dName', iEast:'dEast', iNorth:'dNorth', iElev:'dElev' };
+
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(points)); }
+  function load() { try { points = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { points = []; } }
+
+  function fmt3(v) { return parseFloat(v).toFixed(3); }
+
+  function buildCsv() {
+    let lines = ['Name,Easting,Northing,Elevation'];
+    for (const p of points)
+      lines.push(`${p.name},${fmt3(p.easting)},${fmt3(p.northing)},${fmt3(p.elev)}`);
+    return lines.join('\n');
+  }
+
+  function render() {
+    const badge = document.getElementById('countBadge');
+    const tbody = document.getElementById('tableBody');
+    const empty = document.getElementById('emptyState');
+    const previewWrap = document.getElementById('previewWrap');
+    badge.textContent = points.length;
+    if (points.length === 0) {
+      tbody.innerHTML = ''; empty.style.display = ''; previewWrap.style.display = 'none'; return;
+    }
+    empty.style.display = 'none'; previewWrap.style.display = '';
+    tbody.innerHTML = points.map((p,i) => `
+      <tr>
+        <td>${esc(p.name)}</td>
+        <td>${fmt3(p.easting)}</td>
+        <td>${fmt3(p.northing)}</td>
+        <td>${fmt3(p.elev)}</td>
+        <td><button class="del-btn" onclick="deletePoint(${i})">×</button></td>
+      </tr>`).join('');
+    document.getElementById('csvPreview').textContent = buildCsv();
+  }
+
+  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  function setDisplay(inputId, value) {
+    vals[inputId] = value;
+    const d = document.getElementById(displayIds[inputId]);
+    if (!value) {
+      d.textContent = placeholders[inputId];
+      d.classList.add('ph');
+    } else {
+      d.textContent = value;
+      d.classList.remove('ph');
+    }
+  }
+
+  // ── MODAL ──────────────────────────────────────────────────
+  let modalTarget = null;
+  let modalIsNum  = false;
+
+  function openModal(inputId, displayId, labelText, isNum) {
+    modalTarget = inputId;
+    modalIsNum  = isNum;
+    document.getElementById('modalLabel').textContent = labelText + ' eingeben';
+    const mi = document.getElementById('modalInput');
+    mi.inputMode = isNum ? 'decimal' : 'text';
+    mi.value = vals[inputId] || '';
+    document.getElementById('modalOverlay').classList.add('open');
+    // slight delay so overlay renders before keyboard pops
+    setTimeout(() => mi.focus(), 80);
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+    document.getElementById('modalInput').blur();
+    modalTarget = null;
+  }
+
+  function modalOk() {
+    if (!modalTarget) return;
+    const raw = document.getElementById('modalInput').value.trim();
+    if (raw === '') { closeModal(); return; }
+    // For number fields: validate
+    if (modalIsNum && isNaN(parseFloat(raw.replace(',','.')))) {
+      showToast('Ungültige Zahl', true); return;
+    }
+    const cleaned = modalIsNum ? raw.replace(',','.') : raw;
+    setDisplay(modalTarget, cleaned);
+    closeModal();
+    showToast('Eingetragen ✓');
+  }
+
+  function overlayClick(e) {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  }
+
+  // ── ADD / DELETE ───────────────────────────────────────────
+  function addPoint() {
+    const name  = vals.iName.trim();
+    const east  = vals.iEast.trim();
+    const north = vals.iNorth.trim();
+    const elev  = vals.iElev.trim();
+
+    if (!name || !east || !north) { showToast('Name, Easting & Northing sind Pflicht', true); return; }
+
+    points.push({
+      name,
+      easting:  parseFloat(east),
+      northing: parseFloat(north),
+      elev:     elev === '' ? 0 : parseFloat(elev)
+    });
+    save(); render();
+    ['iName','iEast','iNorth','iElev'].forEach(id => setDisplay(id,''));
+    showToast('Punkt hinzugefügt ✓');
+  }
+
+  function deletePoint(i) { points.splice(i,1); save(); render(); showToast('Gelöscht'); }
+
+  function clearAll() {
+    if (!points.length) return;
+    if (confirm(`Alle ${points.length} Punkte löschen?`)) { points=[]; save(); render(); showToast('Liste geleert'); }
+  }
+
+  function exportCsv() {
+    if (!points.length) { showToast('Keine Punkte vorhanden', true); return; }
+    const blob = new Blob([buildCsv()], {type:'text/csv;charset=utf-8;'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `koordinaten_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    showToast('CSV exportiert ✓');
+  }
+
+  // ── TOAST ──────────────────────────────────────────────────
+  let toastTimer;
+  function showToast(msg, isError) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = isError ? 'var(--danger)' : 'var(--accent)';
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  load(); render();
+</script>
+</body>
+</html>
